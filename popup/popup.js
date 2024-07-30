@@ -7,45 +7,59 @@ const startButton = document.getElementById("startButton");
 const stopButton = document.getElementById("stopButton");
 
 startButton.onclick = () => {
-    // Get location ID from input field
-    const locationId = locationIdElement.value;
-    
-    // Get start and end dates from input fields
-    const startDate = new Date(startDateElement.value);
-    const endDate = new Date(endDateElement.value);
-    
-    // Validate input fields
-    if (!locationId || isNaN(locationId) || locationId <= 0) {
-        alert("Please enter a valid location ID");
-        return;
-    }
-    
-    if (!startDate ||!endDate || startDate > endDate) {
-        alert("Please enter valid start and end dates");
-        return;
-    }
-    
-    // Start tracking location data
-    startTrackingLocation(locationId, startDate, endDate);
-}
+	const allFieldsValid = performOnStartValidations();
+
+	if (allFieldsValid) {
+		handleOnStartState();
+		const prefs = {
+			locationId: locationIdElement.value,
+			startDate: startDateElement.value,
+			endDate: endDateElement.value,
+			tzData: locationIdElement.options[locationIdElement.selectedIndex].getAttribute("data-tz"),
+        };
+		chrome.runtime.sendMessage({ event: "onStart", prefs });
+	}
+};
 
 stopButton.onclick = () => {
-    // Stop tracking location data
-    stopTrackingLocation();
-}
+	handleOnStopState();
+	chrome.runtime.sendMessage({ event: "onStop" });
+};
 
-chrome.storage.local.get(["locationId", "startDate", "endDate"], (result) => {
-    const { localId, startDate, endDate } = result;
 
-    if (localId) {
-        locationIdElement.value = localId;
-    }
-    
-    if (startDate) {
-        startDateElement.valueAsDate = new Date(startDate);
-    }
-    
-    if (endDate) {
-        endDateElement.valueAsDate = new Date(endDate);
-    }
-})
+chrome.storage.local.get(
+	["locationId", "startDate", "endDate", "locations", "isRunning"],
+	(result) => {
+		const { locationId, startDate, endDate, locations, isRunning } = result;
+
+		setLocations(locations);
+
+		if (locationId) {
+			locationIdElement.value = locationId;
+		}
+
+		if (startDate) {
+			startDateElement.value = startDate;
+		}
+
+		if (endDate) {
+			endDateElement.value = endDate;
+		}
+
+		if (isRunning) {
+			handleOnStartState();
+		} else {
+			handleOnStopState();
+		}
+	}
+);
+
+const setLocations = (locations) => {
+	locations.forEach((location) => {
+		let optionElement = document.createElement("option");
+		optionElement.value = location.id;
+		optionElement.innerHTML = location.name;
+		optionElement.setAttribute("data-tz", location.tzData);
+		locationIdElement.appendChild(optionElement);
+	});
+};
