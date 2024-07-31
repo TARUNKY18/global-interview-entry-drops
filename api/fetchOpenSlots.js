@@ -1,3 +1,4 @@
+
 // Fetch the list of open interviews at a location in a given date period
 export const fetchOpenSlots = (result) => {
 	return new Promise((resolve, reject) => {

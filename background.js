@@ -11,6 +11,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 	handleOnStop();
 	fetchLocations();
 });
+
 chrome.runtime.onMessage.addListener((data) => {
 	const { event, prefs } = data;
 	switch (event) {
@@ -51,4 +52,33 @@ const handleOnStart = (prefs) => {
 
 const setRunningStatus = (isRunning) => {
 	chrome.storage.local.set({ isRunning });
+};
+
+const createAlarm = () => {
+	chrome.alarms.get(ALARM_JOB_NAME, (existingAlarm) => {
+		if (!existingAlarm) {
+			// immediately run the job
+			openSlotsJob();
+			chrome.alarms.create(ALARM_JOB_NAME, { periodInMinutes: 1.0 });
+		}
+	});
+};
+
+const stopAlarm = () => {
+	chrome.alarms.clearAll();
+};
+
+const openSlotsJob = () => {
+	fetchOpenSlots(cachedPrefs).then((data) => handleOpenSlots(data));
+};
+
+const handleOpenSlots = (openSlots) => {
+	if (
+		openSlots &&
+		openSlots.length > 0 &&
+		openSlots[0].timestamp != firstApptTimestamp
+	) {
+		firstApptTimestamp = openSlots[0].timestamp;
+		createNotification(openSlots[0], openSlots.length, cachedPrefs);
+	}
 };

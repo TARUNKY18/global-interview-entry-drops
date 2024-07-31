@@ -1,3 +1,5 @@
+
+// ELEMENTS
 const locationIdElement = document.getElementById("locationId");
 const startDateElement = document.getElementById("startDate");
 const endDateElement = document.getElementById("endDate");
@@ -10,7 +12,7 @@ const stopButton = document.getElementById("stopButton");
 const runningSpan = document.getElementById("runningSpan");
 const stoppedSpan = document.getElementById("stoppedSpan");
 
-// Error listeners
+// Error message
 const locationIdError = document.getElementById("locationIdError");
 const startDateError = document.getElementById("startDateError");
 const endDateError = document.getElementById("endDateError");
@@ -117,7 +119,6 @@ const performOnStartValidations = () => {
 	return locationIdElement.value && isDateValid;
 };
 
-
 startButton.onclick = () => {
 	const allFieldsValid = performOnStartValidations();
 
@@ -127,8 +128,11 @@ startButton.onclick = () => {
 			locationId: locationIdElement.value,
 			startDate: startDateElement.value,
 			endDate: endDateElement.value,
-			tzData: locationIdElement.options[locationIdElement.selectedIndex].getAttribute("data-tz"),
-        };
+			tzData:
+				locationIdElement.options[locationIdElement.selectedIndex].getAttribute(
+					"data-tz"
+				),
+		};
 		chrome.runtime.sendMessage({ event: "onStart", prefs });
 	}
 };
@@ -137,7 +141,6 @@ stopButton.onclick = () => {
 	handleOnStopState();
 	chrome.runtime.sendMessage({ event: "onStop" });
 };
-
 
 chrome.storage.local.get(
 	["locationId", "startDate", "endDate", "locations", "isRunning"],
@@ -166,6 +169,12 @@ chrome.storage.local.get(
 	}
 );
 
+// {
+//  "id" : 5005,
+//  "name" : "El Paso Enrollment Center",
+//  "shortName" : "El Paso Enrollment Center",
+//  "tzData" : "America/Denver"
+// }
 const setLocations = (locations) => {
 	locations.forEach((location) => {
 		let optionElement = document.createElement("option");
@@ -175,3 +184,7 @@ const setLocations = (locations) => {
 		locationIdElement.appendChild(optionElement);
 	});
 };
+
+const today = spacetime.now().startOf("day").format();
+startDateElement.setAttribute("min", today);
+endDateElement.setAttribute("min", today);
